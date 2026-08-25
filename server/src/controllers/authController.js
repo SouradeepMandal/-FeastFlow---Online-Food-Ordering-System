@@ -157,18 +157,29 @@ export const sendOtp = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Generate 6 digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generate 6 digit OTP, fallback to 123456 if SMTP is missing to prevent timeouts
+    let otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const isSmtpConfigured = !!process.env.SMTP_HOST;
     
+    if (!isSmtpConfigured) {
+      console.warn('SMTP_HOST is not configured! Using fallback OTP 123456 for demonstration purposes.');
+      otp = '123456';
+    }
+
     user.otp = otp;
     user.otpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
     await user.save();
+
+    if (!isSmtpConfigured) {
+      // Avoid hanging the request trying to send an email without SMTP config
+      return res.status(200).json({ message: 'Demo Mode: SMTP not configured. Use OTP 123456 to login.' });
+    }
 
     const emailSent = await sendOTPEmail(user.email, otp);
     if (emailSent) {
       res.status(200).json({ message: 'OTP sent to email' });
     } else {
-      res.status(500).json({ message: 'Failed to send email' });
+      res.status(500).json({ message: 'Failed to send email. Please check SMTP configuration.' });
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -230,6 +241,12 @@ export const forgotPassword = async (req, res) => {
 
     // Create reset url
     const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+
+    const isSmtpConfigured = !!process.env.SMTP_HOST;
+    if (!isSmtpConfigured) {
+      console.warn('SMTP_HOST not configured. Sending reset URL in response for demo mode: ', resetUrl);
+      return res.status(200).json({ message: 'Demo Mode: SMTP not configured. Reset link generated.', resetUrl });
+    }
 
     const emailSent = await sendPasswordResetEmail(user.email, resetUrl);
     
