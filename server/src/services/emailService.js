@@ -2,23 +2,31 @@ import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 dotenv.config();
 
+// SMTP config — set these vars in Render Dashboard > Environment
+const SMTP_HOST = process.env.SMTP_HOST;
+const SMTP_PORT = process.env.SMTP_PORT || 587;
+const SMTP_USER = process.env.SMTP_USER;
+const SMTP_PASS = process.env.SMTP_PASS;
+const SMTP_FROM = process.env.SMTP_FROM_EMAIL;
+
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  secure: false, // true for 465, false for other ports
+  host: SMTP_HOST,
+  port: Number(SMTP_PORT),
+  secure: false,
   auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
+    user: SMTP_USER,
+    pass: SMTP_PASS,
   },
-  connectionTimeout: 5000,
-  greetingTimeout: 5000,
-  socketTimeout: 5000,
+  connectionTimeout: 8000,
+  greetingTimeout: 8000,
+  socketTimeout: 8000,
 });
+
 
 export const sendOTPEmail = async (toEmail, otpCode) => {
   try {
     const mailOptions = {
-      from: `"FeastFlow" <${process.env.SMTP_FROM_EMAIL}>`,
+      from: `"FeastFlow" <${SMTP_FROM}>`,
       to: toEmail,
       subject: 'Your FeastFlow Login OTP',
       html: `
@@ -43,7 +51,7 @@ export const sendOTPEmail = async (toEmail, otpCode) => {
 export const sendPasswordResetEmail = async (toEmail, resetUrl) => {
   try {
     const mailOptions = {
-      from: `"FeastFlow Support" <${process.env.SMTP_FROM_EMAIL}>`,
+      from: `"FeastFlow Support" <${SMTP_FROM}>`,
       to: toEmail,
       subject: 'FeastFlow Password Reset Request',
       html: `
@@ -70,7 +78,7 @@ export const sendPasswordResetEmail = async (toEmail, resetUrl) => {
 export const sendCredentialsEmail = async (toEmail, restaurantName, username, password) => {
   try {
     const mailOptions = {
-      from: `"FeastFlow Welcome" <${process.env.SMTP_FROM_EMAIL}>`,
+      from: `"FeastFlow Welcome" <${SMTP_FROM}>`,
       to: toEmail,
       subject: 'Welcome to FeastFlow - Your Restaurant Owner Credentials',
       html: `
