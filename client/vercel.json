@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://your-render-app-name.onrender.com/api/$1"
+      "destination": "https://feastflow-online-food-ordering-system.onrender.com"
     },
     {
       "source": "/(.*)",
