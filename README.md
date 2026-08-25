@@ -16,11 +16,15 @@ FeastFlow is divided into three distinct user experiences: **Customers**, **Rest
 * **Smart Cart & Customization:** When clicking on a dish, a beautifully designed modal appears. Customers can customize their order by selecting sizes (which dynamically updates the price) and toggling add-ons (like "Extra Cheese"). These items are added to a persistent Smart Cart stored in local storage.
 * **Checkout & Tracking:** Customers proceed to checkout to finalize their order. Once an order is placed, they can track its status in real-time.
 
-### 🤝 2. The "Become a Partner" Workflow (Vendor Onboarding)
-FeastFlow allows everyday customers to become restaurant owners through a seamless onboarding pipeline:
-1. **The Application:** A logged-in customer fills out the "Become a Partner" form, providing their restaurant name, business address, and setting up a unique **Owner Username** and **Owner Password**.
-2. **Admin Approval:** The application is routed to the Admin Dashboard under "Pending Approvals". The Admin reviews the details and clicks "Approve".
-3. **Identity Separation (Crucial Feature):** Once approved, the system creates the restaurant. *Crucially, the user's original customer login (Email + Password) remains completely untouched.* They can still log in with their email to buy food as a customer. However, to manage their business, they must navigate to the dedicated **Owner Login** portal and log in using their new, distinct Owner Username and Password.
+### 🤝 2. The "Become a Partner" Workflow & Gemini AI Integration
+FeastFlow allows everyday customers to become restaurant owners through an advanced, AI-driven onboarding pipeline:
+1. **The Application:** A logged-in customer fills out the "Become a Partner" form, uploading their FSSAI License and GST Certificate, along with restaurant details.
+2. **AI Document Validation (Gemini 2.5 Flash):** When the application is submitted, Google Gemini AI instantly cross-checks the provided business details against the uploaded documents. It verifies the 14-digit FSSAI format and 15-character GST format. Gemini assigns an overall `geminiConfidenceScore` (0-100) and specific pass/fail verdicts.
+3. **Automated vs. Manual Approval:** 
+   * If Gemini scores the application >= 80 and all documents pass, the restaurant is **automatically approved**, bypassing human intervention! 
+   * If the score is lower, it enters "Pending Approvals" in the Admin Dashboard for **Manual Review**. If an Admin rejects it, Gemini automatically drafts a polite, empathetic rejection email to the user.
+4. **AI Credential Generation:** Upon approval (automated or manual), Gemini acts as a secure identity manager. It generates a professional, memorable **Owner Username** (derived from the restaurant name, explicitly avoiding database collisions via iterative prompting) and a secure 8-character **Owner Password**.
+5. **Identity Separation:** The user's original customer login (Email + Password) remains completely untouched. To manage their business, they must navigate to the **Owner Portal** and log in using the newly AI-generated Owner Username and Password sent to their inbox.
 
 ### 🏪 3. The Restaurant Owner Journey
 Once an approved partner logs into the dedicated Owner Portal, they gain access to the **Owner Dashboard**:
