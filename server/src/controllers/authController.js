@@ -157,32 +157,22 @@ export const sendOtp = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Generate 6 digit OTP, fallback to 123456 if SMTP is missing to prevent timeouts
-    let otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const isSmtpConfigured = !!process.env.SMTP_HOST;
-    
-    if (!isSmtpConfigured) {
-      console.warn('SMTP_HOST is not configured! Using fallback OTP 123456 for demonstration purposes.');
-      otp = '123456';
-    }
+    // Generate a cryptographically random 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     user.otp = otp;
     user.otpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
     await user.save();
 
-    if (!isSmtpConfigured) {
-      // Avoid hanging the request trying to send an email without SMTP config
-      return res.status(200).json({ message: 'Demo Mode: SMTP not configured. Use OTP 123456 to login.' });
-    }
-
     const emailSent = await sendOTPEmail(user.email, otp);
     if (emailSent) {
       res.status(200).json({ message: 'OTP sent to email' });
     } else {
-      console.warn('SMTP connection timed out or failed. Falling back to OTP 123456');
-      user.otp = '123456';
+      // Email failed - clear the OTP so it can't be guessed
+      user.otp = undefined;
+      user.otpExpires = undefined;
       await user.save();
-      res.status(200).json({ message: 'SMTP blocked by hosting provider. Use OTP 123456 to login.' });
+      res.status(500).json({ message: 'Failed to send OTP email. Please try again later.' });
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -245,19 +235,16 @@ export const forgotPassword = async (req, res) => {
     // Create reset url
     const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
-    const isSmtpConfigured = !!process.env.SMTP_HOST;
-    if (!isSmtpConfigured) {
-      console.warn('SMTP_HOST not configured. Sending reset URL in response for demo mode: ', resetUrl);
-      return res.status(200).json({ message: 'Demo Mode: SMTP not configured. Reset link generated.', resetUrl });
-    }
-
     const emailSent = await sendPasswordResetEmail(user.email, resetUrl);
     
     if (emailSent) {
       res.status(200).json({ message: 'Password reset link sent to email' });
     } else {
-      console.warn('SMTP connection timed out or failed. Returning reset URL in response.');
-      res.status(200).json({ message: 'SMTP blocked by hosting provider. Use this link to reset password.', resetUrl });
+      // Email failed - invalidate the token so it can't be exploited
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpires = undefined;
+      await user.save();
+      res.status(500).json({ message: 'Failed to send password reset email. Please try again later.' });
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
