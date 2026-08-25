@@ -7,29 +7,46 @@ export const updateUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
 
-    if (user) {
-      user.name = req.body.name || user.name;
-      user.email = req.body.email || user.email;
-
-      if (req.body.password) {
-        user.password = req.body.password; // Pre-save middleware will hash it
-      }
-
-      const updatedUser = await user.save();
-
-      res.json({
-        _id: updatedUser._id,
-        name: updatedUser.name,
-        email: updatedUser.email,
-        isAdmin: updatedUser.isAdmin,
-      });
-    } else {
-      res.status(404).json({ message: 'User not found' });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
+
+    user.name = req.body.name || user.name;
+    user.email = req.body.email || user.email;
+
+    if (req.body.phone !== undefined) {
+      user.phone = req.body.phone;
+    }
+
+    if (req.body.address) {
+      if (typeof req.body.address === 'string') {
+        user.addresses = [{ street: req.body.address, isDefault: true }];
+      } else {
+        user.addresses = [req.body.address];
+      }
+    }
+
+    // Only update the customer password — NEVER touch ownerPassword
+    if (req.body.password && req.body.password.trim() !== '') {
+      user.password = req.body.password;
+    }
+
+    const updatedUser = await user.save();
+
+    res.json({
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      phone: updatedUser.phone,
+      role: updatedUser.role,
+      avatar: updatedUser.avatar,
+      restaurantId: updatedUser.restaurantId,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 // @desc    Toggle wishlist item
 // @route   POST /api/auth/wishlist

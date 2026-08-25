@@ -8,6 +8,29 @@ import { GoogleGenAI } from '@google/genai';
 import Category from '../models/Category.js';
 import mongoose from 'mongoose';
 
+// @desc    Get owner's restaurant info
+// @route   GET /api/owner/restaurant
+// @access  Private/Owner
+export const getOwnerRestaurant = async (req, res) => {
+  try {
+    let restaurant = null;
+    if (req.user.restaurantId) {
+      restaurant = await Restaurant.findById(req.user.restaurantId);
+    }
+    if (!restaurant) {
+      restaurant = await Restaurant.findOne({ ownerId: req.user._id });
+    }
+    if (!restaurant) {
+      return res.status(404).json({ message: 'No restaurant found' });
+    }
+    res.json(restaurant);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+
 // @desc    Get logged in owner's orders
 // @route   GET /api/owner/orders
 // @access  Private/Owner

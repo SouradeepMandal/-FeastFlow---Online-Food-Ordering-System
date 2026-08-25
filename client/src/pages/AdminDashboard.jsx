@@ -15,6 +15,7 @@ const AdminDashboard = () => {
   const [onboardingRequests, setOnboardingRequests] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [announcement, setAnnouncement] = useState({ audience: 'customers', subject: '', description: '' });
+  const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [invite, setInvite] = useState({ email: '', role: 'restaurant_owner' });
   const [expandedRequest, setExpandedRequest] = useState(null);
   
@@ -86,16 +87,28 @@ const AdminDashboard = () => {
 
   const handleSendAnnouncement = async (e) => {
     e.preventDefault();
+    if (announcement.audience === 'specific' && selectedUserIds.length === 0) {
+      alert('Please select at least one user.');
+      return;
+    }
     try {
       setIsLoading(true);
-      const res = await axios.post('/api/admin/announcements', announcement, { withCredentials: true });
+      const payload = { ...announcement, userIds: selectedUserIds };
+      const res = await axios.post('/api/admin/announcements', payload, { withCredentials: true });
       alert(res.data.message);
-      setAnnouncement({ audience: 'all', subject: '', description: '' });
+      setAnnouncement({ audience: 'customers', subject: '', description: '' });
+      setSelectedUserIds([]);
     } catch (error) {
       alert('Failed to send announcement');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const toggleUserSelection = (userId) => {
+    setSelectedUserIds(prev =>
+      prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]
+    );
   };
 
   const handleRoleChange = async (userId, newRole) => {
@@ -490,22 +503,59 @@ const AdminDashboard = () => {
 
         {/* Announcements Tab */}
         {activeTab === 'announcements' && (
-          <div className="max-w-2xl mx-auto">
-            <h1 className="text-3xl font-display font-bold mb-8">Broadcast Announcement</h1>
+          <div className="max-w-3xl mx-auto">
+            <h1 className="text-3xl font-display font-bold mb-8">📢 Broadcast Announcement</h1>
             <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-soft p-8">
               <form onSubmit={handleSendAnnouncement} className="space-y-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Audience</label>
                   <select
                     value={announcement.audience}
-                    onChange={(e) => setAnnouncement({...announcement, audience: e.target.value})}
+                    onChange={(e) => {
+                      setAnnouncement({...announcement, audience: e.target.value});
+                      setSelectedUserIds([]);
+                      // Load users list if specific is selected
+                      if (e.target.value === 'specific' && users.length === 0) {
+                        axios.get('/api/auth/users', { withCredentials: true }).then(r => setUsers(r.data)).catch(() => {});
+                      }
+                    }}
                     className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/50"
                   >
                     <option value="all">All Users</option>
                     <option value="customers">Customers Only</option>
                     <option value="owners">Restaurant Owners Only</option>
+                    <option value="specific">Specific Users (Select Below)</option>
                   </select>
                 </div>
+
+                {/* Specific User Selector */}
+                {announcement.audience === 'specific' && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      Select Recipients ({selectedUserIds.length} selected)
+                    </label>
+                    <div className="max-h-52 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-xl divide-y divide-gray-100 dark:divide-gray-800">
+                      {Array.isArray(users) && users.map(u => (
+                        <label key={u._id} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={selectedUserIds.includes(u._id)}
+                            onChange={() => toggleUserSelection(u._id)}
+                            className="w-4 h-4 accent-primary"
+                          />
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                            {u.name?.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm truncate">{u.name}</p>
+                            <p className="text-xs text-gray-400 truncate">{u.email} · <span className="capitalize">{u.role}</span></p>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Subject</label>
                   <input
@@ -518,7 +568,7 @@ const AdminDashboard = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Description</label>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Message</label>
                   <textarea
                     required
                     rows="5"
@@ -531,9 +581,9 @@ const AdminDashboard = () => {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full btn-primary py-3"
+                  className="w-full btn-primary py-3 text-lg"
                 >
-                  {isLoading ? 'Sending...' : 'Broadcast Announcement'}
+                  {isLoading ? 'Sending...' : '📤 Send Announcement'}
                 </button>
               </form>
             </div>

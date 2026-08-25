@@ -27,6 +27,8 @@ const FoodItemModal = ({ food, onClose }) => {
       extraCheese: wantsExtraCheese,
       foodItem: `${food._id}-${size}-${wantsExtraCheese}`, // unique ID for cart
       originalId: food._id,
+      restaurantId: food.restaurant?._id || food.restaurant,
+      restaurant: food.restaurant?.name || (typeof food.restaurant === 'string' ? food.restaurant : ''),
       qty 
     }));
     toast.success(`${food.name} added to cart!`);

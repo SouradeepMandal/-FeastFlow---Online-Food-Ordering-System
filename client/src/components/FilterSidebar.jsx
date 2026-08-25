@@ -17,6 +17,18 @@ const FilterSidebar = ({ filters, setFilters }) => {
         Filters
       </h2>
 
+      {/* Search by Restaurant */}
+      <div className="mb-6 relative">
+        <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-gray-500">Search by Restaurant</h3>
+        <input 
+          type="text" 
+          placeholder="Restaurant name..." 
+          className="input-field w-full py-2 px-3 text-sm"
+          value={filters.restaurantName || ''}
+          onChange={(e) => setFilters({ ...filters, restaurantName: e.target.value })}
+        />
+      </div>
+
       {/* Sort By */}
       <div className="mb-6">
         <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider text-gray-500">Sort By</h3>
@@ -97,7 +109,7 @@ const FilterSidebar = ({ filters, setFilters }) => {
       
       {/* Clear Filters */}
       <button 
-        onClick={() => setFilters({ isVeg: undefined, sort: '', minPrice: '', maxPrice: '' })}
+        onClick={() => setFilters({ isVeg: undefined, sort: '', minPrice: '', maxPrice: '', restaurantName: '' })}
         className="w-full py-2 text-sm text-gray-500 hover:text-primary transition-colors font-medium"
       >
         Clear all filters

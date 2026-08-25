@@ -10,6 +10,7 @@ const OwnerDashboard = () => {
   const [analytics, setAnalytics] = useState(null);
   const [orders, setOrders] = useState([]);
   const [menu, setMenu] = useState([]);
+  const [restaurant, setRestaurant] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [currentFood, setCurrentFood] = useState(null);
   const [marketingPrompt, setMarketingPrompt] = useState('');
@@ -24,6 +25,12 @@ const OwnerDashboard = () => {
       navigate('/');
       return;
     }
+
+    // Fetch restaurant info for sidebar display
+    axios.get('/api/owner/restaurant', { withCredentials: true })
+      .then(({ data }) => setRestaurant(data))
+      .catch(() => {}); // silently fail if no restaurant yet
+
 
     const fetchData = async () => {
       try {
@@ -123,10 +130,26 @@ const OwnerDashboard = () => {
     <div className="min-h-screen flex bg-gray-50 dark:bg-[#0f172a]">
       {/* Sidebar */}
       <div className="w-64 bg-white dark:bg-surface-dark shadow-xl border-r border-gray-100 dark:border-gray-800 flex flex-col fixed h-full z-10">
-        <div className="p-6">
-          <h2 className="text-2xl font-display font-bold text-primary flex items-center gap-2">
-            <Store className="w-6 h-6" /> Owner Portal
-          </h2>
+        <div className="p-6 border-b border-gray-100 dark:border-gray-800">
+          <div className="flex items-center gap-2 mb-3">
+            <Store className="w-5 h-5 text-primary" />
+            <span className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Owner Portal</span>
+          </div>
+          {/* Prominent Restaurant Name */}
+          <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl p-3 border border-primary/20">
+            <p className="text-xs text-primary font-semibold uppercase tracking-widest mb-1">Your Restaurant</p>
+            <h2 className="text-xl font-display font-bold text-gray-900 dark:text-white leading-tight">
+              {restaurant?.name || user?.name || 'My Restaurant'}
+            </h2>
+            {restaurant?.cuisine && (
+              <p className="text-xs text-gray-500 mt-1">{restaurant.cuisine}</p>
+            )}
+            <span className={`inline-block mt-2 px-2 py-0.5 rounded-full text-xs font-bold ${
+              restaurant?.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+            }`}>
+              {restaurant?.status || 'Active'}
+            </span>
+          </div>
         </div>
         <nav className="flex-1 px-4 space-y-2 mt-4">
           <button

@@ -38,8 +38,8 @@ export const ownerLogin = async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    // Owner username is their email address (sent in the approval email)
-    const user = await User.findOne({ email: username });
+    // Owner username is the unique generated username
+    const user = await User.findOne({ ownerUsername: username });
 
     if (!user) {
       return res.status(401).json({ message: 'Invalid owner credentials' });
@@ -49,7 +49,7 @@ export const ownerLogin = async (req, res) => {
       return res.status(403).json({ message: 'This portal is only for restaurant owners. Please use the regular login.' });
     }
 
-    const isMatch = await user.matchPassword(password);
+    const isMatch = await user.matchOwnerPassword(password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid owner credentials' });
     }

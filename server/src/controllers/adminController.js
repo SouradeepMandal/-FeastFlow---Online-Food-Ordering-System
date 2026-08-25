@@ -107,24 +107,32 @@ export const updateOnboardingStatus = async (req, res) => {
 // @access  Private/Admin
 export const sendAnnouncement = async (req, res) => {
   try {
-    const { audience, subject, description } = req.body;
+    const { audience, subject, description, userIds } = req.body;
     
-    let query = {};
-    if (audience === 'customers') query.role = 'customer';
-    else if (audience === 'owners') query.role = 'restaurant_owner';
+    let users = [];
 
-    const users = await User.find(query);
+    if (audience === 'specific' && Array.isArray(userIds) && userIds.length > 0) {
+      // Send only to specifically selected users
+      users = await User.find({ _id: { $in: userIds } });
+    } else {
+      let query = {};
+      if (audience === 'customers') query.role = 'customer';
+      else if (audience === 'owners') query.role = 'restaurant_owner';
+      // 'all' => no filter
+      users = await User.find(query);
+    }
+
     const notifications = users.map(user => ({
       userId: user._id,
       type: 'general',
-      message: `${subject}\n\n${description}`
+      message: `📢 ${subject}\n\n${description}`
     }));
 
     if (notifications.length > 0) {
       await Notification.insertMany(notifications);
     }
 
-    res.json({ message: `Announcement sent to ${notifications.length} users` });
+    res.json({ message: `Announcement sent to ${notifications.length} user(s)` });
   } catch (error) {
     console.error('Error sending announcement:', error);
     res.status(500).json({ message: 'Server error sending announcement' });

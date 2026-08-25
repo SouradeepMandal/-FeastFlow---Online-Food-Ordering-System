@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { addToCart, removeFromCart } from '../features/cart/cartSlice';
+import { addToCart, removeFromCart, clearCartItems } from '../features/cart/cartSlice';
 import { Trash2, ShoppingBag } from 'lucide-react';
+import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -9,6 +12,7 @@ const Cart = () => {
 
   const cart = useSelector((state) => state.cart);
   const { cartItems } = cart;
+  const { user } = useSelector((state) => state.auth);
 
   const addToCartHandler = (item, qty) => {
     dispatch(addToCart({ ...item, qty }));
@@ -19,7 +23,11 @@ const Cart = () => {
   };
 
   const checkoutHandler = () => {
-    navigate('/login?redirect=/checkout');
+    if (!user) {
+      navigate('/login?redirect=/checkout');
+    } else {
+      navigate('/checkout');
+    }
   };
 
   return (
@@ -46,12 +54,20 @@ const Cart = () => {
                 {cartItems.map((item) => (
                   <li key={item.foodItem} className="p-6 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <img src={item.image || 'https://via.placeholder.com/150'} alt={item.name} className="w-20 h-20 rounded-xl object-cover" />
+                      <img
+                        src={item.image || 'https://placehold.co/150x150/f97316/white?text=Food'}
+                        alt={item.name}
+                        className="w-20 h-20 rounded-xl object-cover"
+                        onError={(e) => { e.target.src = 'https://placehold.co/150x150/f97316/white?text=Food'; }}
+                      />
                       <div>
-                        <Link to={`/food/${item.foodItem}`} className="font-bold text-lg hover:text-primary transition-colors">
-                          {item.name}
-                        </Link>
-                        <div className="text-primary font-semibold">${item.price.toFixed(2)}</div>
+                        <p className="font-bold text-lg">{item.name}</p>
+                        {item.restaurant && (
+                          <p className="text-xs text-gray-500 mb-1">
+                            🍴 {typeof item.restaurant === 'object' ? item.restaurant.name : item.restaurant}
+                          </p>
+                        )}
+                        <div className="text-primary font-semibold">${Number(item.price).toFixed(2)}</div>
                       </div>
                     </div>
                     
@@ -89,19 +105,19 @@ const Cart = () => {
               <div className="space-y-3 text-gray-600 dark:text-gray-300">
                 <div className="flex justify-between">
                   <span>Items ({cartItems.reduce((acc, item) => acc + item.qty, 0)})</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">${cart.itemsPrice}</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">${cart.itemsPrice || '0.00'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Delivery Fee</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">${cart.deliveryFee}</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">${cart.deliveryFee || '0.00'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Tax (15%)</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">${cart.taxPrice}</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">${cart.taxPrice || '0.00'}</span>
                 </div>
                 <div className="flex justify-between border-t border-gray-200 dark:border-gray-700 pt-4 mt-4 text-xl font-bold text-gray-900 dark:text-white">
                   <span>Total</span>
-                  <span>${cart.totalPrice}</span>
+                  <span>${cart.totalPrice || '0.00'}</span>
                 </div>
               </div>
 

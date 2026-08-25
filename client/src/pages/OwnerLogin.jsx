@@ -103,17 +103,17 @@ const OwnerLogin = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Owner Username / Email
+                Owner Username
               </label>
               <input
-                type="email"
+                type="text"
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                placeholder="your-email@example.com"
+                placeholder="Your unique owner username"
                 required
                 className="w-full px-4 py-3.5 bg-gray-900 border border-gray-700 text-white rounded-xl focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 placeholder-gray-600 transition-all"
               />
-              <p className="text-xs text-gray-500 mt-1.5">This is your email address sent in the approval notification.</p>
+              <p className="text-xs text-gray-500 mt-1.5">This is your unique username sent in the approval notification.</p>
             </div>
 
             <div>
@@ -137,7 +137,7 @@ const OwnerLogin = () => {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-              <p className="text-xs text-gray-500 mt-1.5">Your password was sent via email when your application was approved.</p>
+              <p className="text-xs text-gray-500 mt-1.5">Your password was sent when your application was approved.</p>
             </div>
 
             <button

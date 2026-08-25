@@ -16,6 +16,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    ownerUsername: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    ownerPassword: {
+      type: String,
+    },
     role: {
       type: String,
       enum: ['customer', 'restaurant_owner', 'admin', 'delivery_agent'],
@@ -85,12 +93,20 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
+userSchema.methods.matchOwnerPassword = async function (enteredPassword) {
+  if (!this.ownerPassword) return false;
+  return await bcrypt.compare(enteredPassword, this.ownerPassword);
+};
+
 userSchema.pre('save', async function () {
-  if (!this.isModified('password')) {
-    return;
+  if (this.isModified('password')) {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
   }
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+  if (this.isModified('ownerPassword')) {
+    const salt = await bcrypt.genSalt(10);
+    this.ownerPassword = await bcrypt.hash(this.ownerPassword, salt);
+  }
 });
 
 const User = mongoose.model('User', userSchema);

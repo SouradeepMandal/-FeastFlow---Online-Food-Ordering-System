@@ -31,18 +31,19 @@ const Login = () => {
     }
     if (isSuccess || user) {
       if (isSuccess) toast.success('Welcome back!');
-      // Regular login always goes to customer-facing pages
       if (user?.role === 'admin') {
         navigate('/admin');
       } else {
-        navigate('/');
+        // Honour the ?redirect= param (e.g. coming from Cart → Checkout)
+        const redirectTo = searchParams.get('redirect') || '/';
+        navigate(redirectTo);
       }
     }
-    
+
     return () => {
       dispatch(reset());
     };
-  }, [user, isError, isSuccess, message, navigate, dispatch]);
+  }, [user, isError, isSuccess, message, navigate, dispatch, searchParams]);
 
   const onChange = (e) => {
     setFormData((prevState) => ({

@@ -53,8 +53,14 @@ const FoodCard = ({ food }) => {
         </p>
 
         {food.category?.name && (
-          <span className="text-xs text-gray-400 dark:text-gray-500 mb-3 capitalize">
+          <span className="text-xs text-gray-400 dark:text-gray-500 mb-1 capitalize">
             {food.category.name}
+          </span>
+        )}
+
+        {food.restaurant?.name && (
+          <span className="text-xs font-semibold text-primary mb-3 line-clamp-1">
+            By {food.restaurant.name}
           </span>
         )}
 

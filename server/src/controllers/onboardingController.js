@@ -185,7 +185,8 @@ export const processApproval = async (requestId, aiFeedback = '') => {
     }
 
     user.role = 'restaurant_owner';
-    user.password = generatedPassword;
+    user.ownerUsername = uniqueUsername;
+    user.ownerPassword = generatedPassword;
     await user.save();
   }
 

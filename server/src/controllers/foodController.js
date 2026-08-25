@@ -1,11 +1,12 @@
 import FoodItem from '../models/FoodItem.js';
+import Restaurant from '../models/Restaurant.js';
 
 // @desc    Fetch all food items with search, filter, sort
 // @route   GET /api/foods
 // @access  Public
 export const getFoods = async (req, res) => {
   try {
-    const { keyword, category, minPrice, maxPrice, isVeg, tags, sort } = req.query;
+    const { keyword, category, minPrice, maxPrice, isVeg, tags, sort, restaurantName } = req.query;
 
     const query = {};
 
@@ -40,6 +41,13 @@ export const getFoods = async (req, res) => {
       query.tags = { $in: tags.split(',') };
     }
 
+    // Filter by restaurant name
+    if (restaurantName) {
+      const restaurants = await Restaurant.find({ name: { $regex: restaurantName, $options: 'i' } });
+      const restaurantIds = restaurants.map(r => r._id);
+      query.restaurant = { $in: restaurantIds };
+    }
+
     // Only show items in stock
     query.countInStock = { $gt: 0 };
 
@@ -69,6 +77,7 @@ export const getFoods = async (req, res) => {
 
     const foods = await FoodItem.find(query)
       .populate('category', 'name')
+      .populate('restaurant', 'name')
       .sort(sortOptions);
 
     res.json(foods);

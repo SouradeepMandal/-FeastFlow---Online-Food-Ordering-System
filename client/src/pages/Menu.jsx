@@ -17,6 +17,7 @@ const Menu = () => {
   const [filters, setFilters] = useState({
     isVeg: undefined,
     sort: '',
+    restaurantName: '',
   });
 
   const isFirstRender = useRef(true);
@@ -33,6 +34,7 @@ const Menu = () => {
     if (filters.sort) query += `sort=${filters.sort}&`;
     if (filters.minPrice) query += `minPrice=${filters.minPrice}&`;
     if (filters.maxPrice) query += `maxPrice=${filters.maxPrice}&`;
+    if (filters.restaurantName) query += `restaurantName=${filters.restaurantName}&`;
     
     const delay = isFirstRender.current ? 0 : 300;
 
@@ -52,7 +54,7 @@ const Menu = () => {
         <div className="relative w-full md:w-96">
           <input
             type="text"
-            placeholder="Search for food..."
+            placeholder="Search by dishes..."
             className="input-field pl-12"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}

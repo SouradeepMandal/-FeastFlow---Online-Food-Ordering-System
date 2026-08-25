@@ -1,7 +1,56 @@
 import Order from '../models/Order.js';
 import Stripe from 'stripe';
+import Restaurant from '../models/Restaurant.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_mock');
+
+// @desc    Instant Buy - Create order, mark paid & delivered immediately
+// @route   POST /api/orders/instant-buy
+// @access  Private
+export const instantBuy = async (req, res) => {
+  try {
+    const {
+      orderItems,
+      deliveryAddress,
+      itemsPrice,
+      taxPrice,
+      deliveryFee,
+      totalPrice,
+    } = req.body;
+
+    if (!orderItems || orderItems.length === 0) {
+      return res.status(400).json({ message: 'No order items' });
+    }
+
+    // Derive restaurantId from the first item if present
+    let restaurantId;
+    if (orderItems[0].restaurantId) {
+      restaurantId = orderItems[0].restaurantId;
+    } else if (orderItems[0].restaurant) {
+      const rest = await Restaurant.findOne({ name: orderItems[0].restaurant });
+      restaurantId = rest?._id;
+    }
+
+    const order = new Order({
+      orderItems,
+      user: req.user._id,
+      restaurant: restaurantId,
+      deliveryAddress: deliveryAddress || { street: 'Instant Purchase', city: 'N/A', country: 'N/A', zipCode: '000000' },
+      paymentMethod: 'Instant Buy (Pay Later)',
+      itemsPrice,
+      taxPrice,
+      deliveryFee,
+      totalPrice,
+      isPaid: false,
+      orderStatus: 'Placed',
+    });
+
+    const createdOrder = await order.save();
+    res.status(201).json(createdOrder);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 // @desc    Create new order
 // @route   POST /api/orders

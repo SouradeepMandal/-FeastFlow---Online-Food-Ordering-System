@@ -72,12 +72,16 @@ export const authSlice = createSlice({
       state.isError = false;
       state.message = '';
     },
+    // Sync Redux + localStorage after profile update
+    updateUser: (state, action) => {
+      const updated = { ...state.user, ...action.payload };
+      state.user = updated;
+      localStorage.setItem('user', JSON.stringify(updated));
+    },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(register.pending, (state) => {
-        state.isLoading = true;
-      })
+      .addCase(register.pending, (state) => { state.isLoading = true; })
       .addCase(register.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
@@ -89,9 +93,7 @@ export const authSlice = createSlice({
         state.message = action.payload;
         state.user = null;
       })
-      .addCase(login.pending, (state) => {
-        state.isLoading = true;
-      })
+      .addCase(login.pending, (state) => { state.isLoading = true; })
       .addCase(login.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
@@ -103,9 +105,7 @@ export const authSlice = createSlice({
         state.message = action.payload;
         state.user = null;
       })
-      .addCase(loginOtp.pending, (state) => {
-        state.isLoading = true;
-      })
+      .addCase(loginOtp.pending, (state) => { state.isLoading = true; })
       .addCase(loginOtp.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
@@ -117,11 +117,9 @@ export const authSlice = createSlice({
         state.message = action.payload;
         state.user = null;
       })
-      .addCase(logout.fulfilled, (state) => {
-        state.user = null;
-      });
+      .addCase(logout.fulfilled, (state) => { state.user = null; });
   },
 });
 
-export const { reset } = authSlice.actions;
+export const { reset, updateUser } = authSlice.actions;
 export default authSlice.reducer;
